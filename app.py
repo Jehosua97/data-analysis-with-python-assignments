@@ -82,11 +82,14 @@ try:
             st.subheader("1. Distribution by Indigenous Identity")
             try:
                 fig, ax = plt.subplots(figsize=(10, 6))
-                sns.barplot(data=filtered_data, x="Indigenous identity", y="VALUE", ax=ax)
-                plt.title("Distribution")
-                plt.xticks(rotation=45, ha='right')
+                chart_data = filtered_data.groupby("Indigenous identity")["VALUE"].mean()
+                chart_data.plot(kind='bar', ax=ax, color='steelblue')
+                ax.set_title("Average VALUE by Indigenous Identity")
+                ax.set_xlabel("Indigenous Identity")
+                ax.set_ylabel("VALUE")
+                plt.tight_layout()
                 st.pyplot(fig)
-                plt.close()
+                plt.close(fig)
             except Exception as e:
                 st.error(f"Error en gráfico 1: {str(e)}")
             
@@ -94,11 +97,14 @@ try:
             st.subheader("2. Distribution by Gender")
             try:
                 fig, ax = plt.subplots(figsize=(10, 6))
-                sns.barplot(data=filtered_data, x="Indigenous identity", y="VALUE", hue="Gender", ax=ax)
-                plt.title("Distribution by Gender")
-                plt.xticks(rotation=45, ha='right')
+                pivot_data = filtered_data.pivot_table(values='VALUE', index='Indigenous identity', columns='Gender', aggfunc='mean')
+                pivot_data.plot(kind='bar', ax=ax)
+                ax.set_title("Average VALUE by Indigenous Identity and Gender")
+                ax.set_xlabel("Indigenous Identity")
+                ax.set_ylabel("VALUE")
+                plt.tight_layout()
                 st.pyplot(fig)
-                plt.close()
+                plt.close(fig)
             except Exception as e:
                 st.error(f"Error en gráfico 2: {str(e)}")
             
@@ -106,11 +112,14 @@ try:
             st.subheader("3. Distribution by Overall Health")
             try:
                 fig, ax = plt.subplots(figsize=(10, 6))
-                sns.barplot(data=filtered_data, x="Indigenous identity", y="VALUE", hue="Overall health", ax=ax)
-                plt.title("Distribution by Overall Health")
-                plt.xticks(rotation=45, ha='right')
+                pivot_data = filtered_data.pivot_table(values='VALUE', index='Indigenous identity', columns='Overall health', aggfunc='mean')
+                pivot_data.plot(kind='bar', ax=ax)
+                ax.set_title("Average VALUE by Indigenous Identity and Overall Health")
+                ax.set_xlabel("Indigenous Identity")
+                ax.set_ylabel("VALUE")
+                plt.tight_layout()
                 st.pyplot(fig)
-                plt.close()
+                plt.close(fig)
             except Exception as e:
                 st.error(f"Error en gráfico 3: {str(e)}")
             
@@ -118,11 +127,14 @@ try:
             st.subheader("4. Distribution by Age Group")
             try:
                 fig, ax = plt.subplots(figsize=(10, 6))
-                sns.barplot(data=filtered_data, x="Indigenous identity", y="VALUE", hue="Age group", ax=ax)
-                plt.title("Distribution by Age Group")
-                plt.xticks(rotation=45, ha='right')
+                pivot_data = filtered_data.pivot_table(values='VALUE', index='Indigenous identity', columns='Age group', aggfunc='mean')
+                pivot_data.plot(kind='bar', ax=ax)
+                ax.set_title("Average VALUE by Indigenous Identity and Age Group")
+                ax.set_xlabel("Indigenous Identity")
+                ax.set_ylabel("VALUE")
+                plt.tight_layout()
                 st.pyplot(fig)
-                plt.close()
+                plt.close(fig)
             except Exception as e:
                 st.error(f"Error en gráfico 4: {str(e)}")
             
@@ -130,11 +142,14 @@ try:
             st.subheader("5. Distribution by Housing - Needs Repairs")
             try:
                 fig, ax = plt.subplots(figsize=(10, 6))
-                sns.barplot(data=filtered_data, x="Indigenous identity", y="VALUE", hue="Housing - Needs repairs", ax=ax)
-                plt.title("Distribution by Housing - Needs Repairs")
-                plt.xticks(rotation=45, ha='right')
+                pivot_data = filtered_data.pivot_table(values='VALUE', index='Indigenous identity', columns='Housing - Needs repairs', aggfunc='mean')
+                pivot_data.plot(kind='bar', ax=ax)
+                ax.set_title("Average VALUE by Indigenous Identity and Housing - Needs Repairs")
+                ax.set_xlabel("Indigenous Identity")
+                ax.set_ylabel("VALUE")
+                plt.tight_layout()
                 st.pyplot(fig)
-                plt.close()
+                plt.close(fig)
             except Exception as e:
                 st.error(f"Error en gráfico 5: {str(e)}")
             
@@ -142,11 +157,14 @@ try:
             st.subheader("6. Distribution by Persons per Room (Crowding)")
             try:
                 fig, ax = plt.subplots(figsize=(10, 6))
-                sns.barplot(data=filtered_data, x="Indigenous identity", y="VALUE", hue="Persons per room (crowding)", ax=ax)
-                plt.title("Distribution by Persons per Room (Crowding)")
-                plt.xticks(rotation=45, ha='right')
+                pivot_data = filtered_data.pivot_table(values='VALUE', index='Indigenous identity', columns='Persons per room (crowding)', aggfunc='mean')
+                pivot_data.plot(kind='bar', ax=ax)
+                ax.set_title("Average VALUE by Indigenous Identity and Crowding")
+                ax.set_xlabel("Indigenous Identity")
+                ax.set_ylabel("VALUE")
+                plt.tight_layout()
                 st.pyplot(fig)
-                plt.close()
+                plt.close(fig)
             except Exception as e:
                 st.error(f"Error en gráfico 6: {str(e)}")
             
