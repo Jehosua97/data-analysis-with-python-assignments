@@ -3,6 +3,7 @@ import pandas as pd
 import pydeck as pdk
 import seaborn as sns
 import streamlit as st
+from pathlib import Path
 
 from analysis_utils import (
     CROWDING_LEVELS,
@@ -29,6 +30,23 @@ HEALTH_COLORS = {
     "Good": "#F2C14E",
     "Fair or poor": "#C44536",
 }
+
+PROJECT_TITLE = (
+    "Correlation between general health and mental health based on housing "
+    "situation for Indigenous Populations"
+)
+
+TEAM_MEMBERS = [
+    "Dylan Luong (5150921)",
+    "Iman Fatima Ghani (5152246)",
+    "Jehosua Alan Joya Venegas (5149910)",
+    "Saurodeep Majumdar (5153010)",
+]
+
+LOGO_CANDIDATES = [
+    Path(__file__).with_name("AUwordmark_Red-1.png"),
+    Path(r".\AUwordmark_Red-1.png"),
+]
 
 
 @st.cache_data
@@ -127,11 +145,169 @@ def render_fair_poor_trend(frame, title, x_label):
     plt.close(fig)
 
 
+def get_logo_path():
+    for candidate in LOGO_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+@st.cache_data
+def load_logo_bytes(logo_path: str):
+    return Path(logo_path).read_bytes()
+
+
+def build_exploration_story_examples(data, dashboard):
+    status_flags = data["STATUS"].fillna("")
+    repair_label_map = {
+        "No, only regular maintenance is needed": "Regular maintenance only",
+        "Yes, minor repairs are needed": "Minor repairs needed",
+        "Yes, major repairs are needed": "Major repairs needed",
+    }
+
+    parsed_example = (
+        data[
+            (data["Geography"].isin(["Canada", "Ontario", "Nunavut"]))
+            & (data["Overall health"] == "Total, self-perceived general health")
+            & (data["Housing - Needs repairs"] == "Total, housing - Needs repairs")
+            & (data["Persons per room (crowding)"] == "1.5 persons or more per room")
+            & (data["Statistics"].isin(["Number of persons", "Percent"]))
+            & (status_flags != "F")
+        ][
+            [
+                "Geography",
+                "Overall health",
+                "Housing - Needs repairs",
+                "Persons per room (crowding)",
+                "Statistics",
+                "VALUE",
+                "STATUS",
+            ]
+        ]
+        .sort_values(["Geography", "Statistics"], ascending=[True, False])
+        .copy()
+    )
+    parsed_example["VALUE"] = parsed_example["VALUE"].round(1)
+
+    metadata_summary = pd.DataFrame(
+        {
+            "Field": ["Indigenous identity", "Age group", "Gender"],
+            "Value visible in the refreshed file": [
+                data["Indigenous identity"].dropna().iloc[0],
+                data["Age group"].dropna().iloc[0],
+                data["Gender"].dropna().iloc[0],
+            ],
+        }
+    )
+
+    estimated_example = (
+        data[status_flags == "E"][
+            [
+                "Geography",
+                "Overall health",
+                "Persons per room (crowding)",
+                "Statistics",
+                "VALUE",
+                "STATUS",
+            ]
+        ]
+        .head(5)
+        .copy()
+    )
+    estimated_example["VALUE"] = estimated_example["VALUE"].round(1)
+
+    raw_percent_example = (
+        data[
+            (data["Geography"] == "Canada")
+            & (data["Statistics"] == "Percent")
+            & (data["Overall health"] == "Self-perceived mental health, fair or poor")
+            & (
+                data["Housing - Needs repairs"].isin(
+                    [
+                        "No, only regular maintenance is needed",
+                        "Yes, minor repairs are needed",
+                        "Yes, major repairs are needed",
+                    ]
+                )
+            )
+            & (data["Persons per room (crowding)"] == "Total, Persons per room (crowding)")
+        ][["Housing - Needs repairs", "VALUE"]]
+        .rename(
+            columns={
+                "Housing - Needs repairs": "Housing condition",
+                "VALUE": "Published Percent",
+            }
+        )
+        .copy()
+    )
+    raw_percent_example["Housing condition"] = raw_percent_example["Housing condition"].map(
+        repair_label_map
+    )
+    raw_percent_example["Published Percent"] = raw_percent_example["Published Percent"].round(1)
+
+    recomputed_example = (
+        dashboard["mental_repairs"][
+            dashboard["mental_repairs"]["Health category"] == "Fair or poor"
+        ][["Housing condition", "Share"]]
+        .rename(columns={"Share": "Recomputed Share (%)"})
+        .sort_values("Recomputed Share (%)")
+        .copy()
+    )
+    recomputed_example["Recomputed Share (%)"] = recomputed_example[
+        "Recomputed Share (%)"
+    ].round(1)
+
+    regional_example = (
+        get_geography_map_data(
+            data,
+            overall_health="Total, self-perceived general health",
+            crowding_category="1.5 persons or more per room",
+            statistic="Percent",
+            include_canada=True,
+            include_aggregate_regions=False,
+        )[["Geography", "VALUE"]]
+        .rename(columns={"VALUE": "Percent"})
+        .sort_values("Percent", ascending=False)
+        .head(5)
+        .copy()
+    )
+    regional_example["Percent"] = regional_example["Percent"].round(1)
+
+    total_rows = len(data)
+    suppressed_rows = int((status_flags == "F").sum())
+    estimated_rows = int((status_flags == "E").sum())
+
+    return {
+        "total_rows": total_rows,
+        "usable_rows": total_rows - suppressed_rows,
+        "suppressed_rows": suppressed_rows,
+        "estimated_rows": estimated_rows,
+        "geographies": int(data["Geography"].nunique()),
+        "parsed_example": parsed_example,
+        "metadata_summary": metadata_summary,
+        "estimated_example": estimated_example,
+        "raw_percent_example": raw_percent_example,
+        "recomputed_example": recomputed_example,
+        "regional_example": regional_example,
+    }
+
+
 dashboard = load_dashboard_data()
 data = dashboard["data"]
 story_metrics = dashboard["story_metrics"]
+exploration_story = build_exploration_story_examples(data, dashboard)
+logo_path = get_logo_path()
 
-st.title("Indigenous Health and Housing Dashboard")
+header_col1, header_col2 = st.columns([1.15, 2.2])
+with header_col1:
+    if logo_path is not None:
+        st.image(load_logo_bytes(str(logo_path)), width=260)
+with header_col2:
+    st.title(PROJECT_TITLE)
+    st.markdown("**Team members**")
+    st.markdown("\n".join(f"- {member}" for member in TEAM_MEMBERS))
+
+st.caption("Course: Data Analysis with Python | Term: Winter 2026")
 st.caption(
     "This dashboard follows the original project proposal: use Python to clean Statistics Canada data "
     "and visually examine how housing conditions relate to self-reported general and mental health."
@@ -142,7 +318,8 @@ st.info(
     "aged 1 year and over living in private dwellings, with exclusions noted by Statistics Canada for "
     "people living on reserves and settlements and for certain First Nations communities in Yukon and the "
     "Northwest Territories. The dashboard focuses on self-reported general health, self-reported mental "
-    "health, housing repair needs, household crowding, and regional variation across Canada."
+    "health, housing repair needs, household crowding, and regional variation across Canada.\n\n"
+    "Source table: https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=4110008001"
 )
 
 metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
@@ -173,9 +350,10 @@ To keep the story easy to follow, the dashboard moves from a **national baseline
 """
 )
 
-guide_tab, snapshot_tab, map_tab, repairs_tab, crowding_tab, data_tab = st.tabs(
+guide_tab, exploration_tab, snapshot_tab, map_tab, repairs_tab, crowding_tab, data_tab = st.tabs(
     [
         "Guide",
+        "Exploration Story",
         "National Snapshot",
         "Regional Map",
         "Repair Needs and Health",
@@ -207,6 +385,93 @@ One important note about the refreshed CSV: this version of the file is organize
 - The regional map uses the published geography breakdown from the updated Statistics Canada file.
 - The health charts focus on three categories: `Excellent or very good`, `Good`, and `Fair or poor`.
 - In the repair and crowding tabs, the most important signal to watch is whether the `Fair or poor` share grows when housing conditions become more difficult.
+"""
+    )
+
+with exploration_tab:
+    st.subheader("How the data exploration unfolded")
+    st.write(
+        "This tab turns the weekly notebook work into a short narrative. It uses real records from the "
+        "parsed Statistics Canada file to show how the exploration moved from raw inspection to the final dashboard logic."
+    )
+
+    story_cols = st.columns(4)
+    with story_cols[0]:
+        st.metric("Rows parsed", f"{exploration_story['total_rows']:,}")
+    with story_cols[1]:
+        st.metric("Usable after `F` filter", f"{exploration_story['usable_rows']:,}")
+    with story_cols[2]:
+        st.metric("Estimated rows (`E`)", f"{exploration_story['estimated_rows']:,}")
+    with story_cols[3]:
+        st.metric("Geographies", exploration_story["geographies"])
+
+    st.markdown("#### Step 1. Understand the shape of the published file")
+    st.write(
+        "The refreshed export was not yet analysis-ready. After parsing it into long-form rows, we could see "
+        "that the file was rich in geography but much less useful for subgroup comparisons."
+    )
+    st.write(
+        "In this refreshed version, `Indigenous identity`, `Age group`, and `Gender` all appear as totals, "
+        "which pushed the final dashboard toward a geography-and-housing story rather than an identity-by-age-by-gender story."
+    )
+
+    structure_cols = st.columns([1.8, 1.0])
+    with structure_cols[0]:
+        st.dataframe(exploration_story["parsed_example"], use_container_width=True)
+    with structure_cols[1]:
+        st.dataframe(exploration_story["metadata_summary"], use_container_width=True)
+
+    st.caption(
+        "These are real parsed rows from the dataset. The table already contains the fields that later became "
+        "the dashboard's core dimensions: geography, health, repair needs, crowding, statistics, values, and status flags."
+    )
+
+    st.markdown("#### Step 2. Check quality flags before building visuals")
+    st.write(
+        f"The exploration phase showed that data quality flags mattered a lot. Out of "
+        f"**{exploration_story['total_rows']:,} parsed rows**, **{exploration_story['suppressed_rows']:,}** are flagged as `F` "
+        "and were excluded from the visuals. Rows flagged as `E` were kept, but interpreted cautiously."
+    )
+    st.dataframe(exploration_story["estimated_example"], use_container_width=True)
+    st.caption(
+        "The rows above are real `E` examples from the file. Keeping them visible during exploration helped us "
+        "see where the published table was usable and where it needed caution."
+    )
+
+    st.markdown("#### Step 3. Test whether the published percentages answer the project question")
+    st.write(
+        "One important discovery was that some raw `Percent` rows were not the right view for the story we wanted to tell. "
+        "In the example below, every repair category returns `100.0` for the same mental-health slice, which is not helpful "
+        "if the goal is to compare health composition across housing conditions."
+    )
+    st.dataframe(exploration_story["raw_percent_example"], use_container_width=True)
+    st.caption(
+        "That was the turning point in the exploration: instead of relying on every raw published percentage, "
+        "we switched to `Number of persons` and recomputed within-condition shares in Python."
+    )
+
+    st.markdown("#### Step 4. Recompute shares and keep the strongest patterns")
+    st.write(
+        "Once we moved to `Number of persons`, the relationships became much easier to interpret. The two examples below "
+        "show the kind of patterns that survived the exploration stage and became central to the final dashboard."
+    )
+
+    result_cols = st.columns(2)
+    with result_cols[0]:
+        st.write("**Example A. Fair-or-poor mental health by repair condition**")
+        st.dataframe(exploration_story["recomputed_example"], use_container_width=True)
+    with result_cols[1]:
+        st.write("**Example B. Severe crowding across geographies**")
+        st.dataframe(exploration_story["regional_example"], use_container_width=True)
+
+    st.markdown(
+        """
+What this exploration changed:
+
+- It showed that the strongest final comparisons should be about **repair needs**, **crowding**, and **regional variation**.
+- It showed that some raw published percentages were not enough on their own, so the dashboard needed recomputed shares from `Number of persons`.
+- It produced the headline patterns used in the final tabs, such as fair-or-poor mental health rising from `23.9%` in regular-maintenance homes to `43.0%` in major-repairs homes.
+- It also showed why geography mattered so much: for severe crowding, the Canada total is `3.5%`, while Nunavut reaches `31.4%` in this dataset.
 """
     )
 

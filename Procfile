@@ -1,1 +1,1 @@
-web: streamlit run app.py --server.port $PORT --server.headless true --logger.level=error
+web: cd "Project Code" && streamlit run app.py --server.port=$PORT --server.headless=true --logger.level=error
