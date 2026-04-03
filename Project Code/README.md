@@ -11,18 +11,32 @@ This project is a Streamlit dashboard based on Statistics Canada Table 41-10-008
 
 ## Install
 
-Open PowerShell in the project folder and run:
+The project uses the root-level `requirements.txt`.
+
+From the repository root, run:
 
 ```powershell
 python -m pip install -r requirements.txt
 ```
 
+If you are already inside `Project Code`, you can also run:
+
+```powershell
+python -m pip install -r ..\requirements.txt
+```
+
 ## Run
 
-Start the dashboard with:
+From inside `Project Code`, start the dashboard with:
 
 ```powershell
 python -m streamlit run app.py
+```
+
+From the repository root, this also works:
+
+```powershell
+python -m streamlit run ".\Project Code\app.py"
 ```
 
 Then open the local URL shown by Streamlit, usually:
@@ -41,7 +55,7 @@ http://localhost:8501/
 ## Data Source
 
 Statistics Canada, Table 41-10-0080-01:
-`General health and mental health by housing situation, First Nations people living off reserve, Métis and Inuit`
+`General health and mental health by housing situation, First Nations people living off reserve, Metis and Inuit`
 
 Main source link:
 

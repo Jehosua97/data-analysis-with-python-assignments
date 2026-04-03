@@ -62,7 +62,7 @@ The paper contributes the following:
 \item \textbf{An evidence-based descriptive presentation} showing that fair-or-poor health becomes much more common as repair needs worsen, and that severe crowding is strongly concentrated in northern geographies such as Nunavut.
 \end{itemize}
 
-The remainder of this paper is organized as follows. Section~II reviews the housing-and-health context motivating the analysis. Section~III describes the dataset and the parsing workflow used to build the analytical table. Section~IV explains the structure of the final dashboard, including the exploration-story component. Section~V presents the main descriptive results from the national, regional, repair-needs, and crowding views. Section~VI discusses interpretation and limitations. Section~VII concludes with the main findings and the value of the final dashboard as a course project deliverable.
+The remainder of this paper is organized as follows. Section~II reviews the housing-and-health context motivating the analysis. Section~III describes the dataset and the parsing workflow used to build the analytical table. Section~IV explains the structure of the final dashboard, including the exploration-story component. Section~V presents the main descriptive results from the national, regional, repair-needs, and crowding views. Section~VI discusses interpretation and limitations. Section~VII concludes with the main findings and the value of the final dashboard as a course project deliverable. Section~VIII provides a brief bonus note on cloud deployment and repository access.
 
 \section{Background}
 
@@ -306,6 +306,14 @@ The report and the dashboard tell the same story. Housing repair needs show the 
 More importantly, the final project shows how the skills developed during the semester made this result possible. Early course work emphasized data cleaning, exploratory plotting, interpretation of published values, and the importance of questioning what a visualization is really showing. Those lessons directly shaped the final product. Without that progression, the project would likely have remained a set of disconnected exploratory charts rather than a coherent and defensible dashboard.
 
 In that sense, the project succeeds not only analytically, but also as a reflection of the semester's learning goals. It demonstrates that Python can be used to parse a difficult public dataset, turn exploratory work into a reproducible pipeline, and present the results through a structured visual narrative. The final dashboard therefore serves both as a substantive analysis of housing and health and as evidence of the practical skills gained throughout the course.
+
+\section{Bonus: Cloud Deployment and Repository Access}
+
+As an additional technical extension, the final dashboard was deployed to the cloud using Heroku so that it could be accessed through a public web link rather than only through a local Streamlit session. This made the project easier to demonstrate, share, and test in a presentation setting, and it added a practical deployment component beyond the analytical work itself.
+
+The deployment structure was intentionally simple. The dashboard application remains in the \texttt{Project Code} folder, with \texttt{app.py} and \texttt{analysis\_utils.py} providing the main logic, while Heroku uses a root-level \texttt{Procfile}, \texttt{requirements.txt}, and \texttt{runtime.txt} to define the execution environment. In practice, the Heroku process starts the Streamlit dashboard from \texttt{Project Code/app.py}, which keeps the project code organized while still matching Heroku's expected app layout.
+
+The cloud deployment also introduced lightweight operational controls. The application could be scaled up for presentation traffic and scaled down to zero when not in use, which is a practical consideration for both availability and cost management. The full project repository is publicly available at \url{https://github.com/Jehosua97/data-analysis-with-python-assignments}, and the final dashboard code used in this paper is located inside the \texttt{Project Code} folder of that repository.
 
 \section*{Acknowledgment}
 
